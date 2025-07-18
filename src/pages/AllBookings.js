@@ -59,7 +59,7 @@ export default function Home() {
 
                   <TableCell>
                     {b.customerId
-                      ? `${b.customerId.name} (${b.customerId.email})`
+                      ? `${b.customerId.name}`
                       : 'N/A'}
                   </TableCell>
 
