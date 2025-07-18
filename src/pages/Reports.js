@@ -32,10 +32,10 @@ export default function Reports() {
     getAllCustomers().then(setCustomers);
   }, []);
 
-  // Get customer name by ID
-  const getCustomerName = (id) => {
-    const customer = customers.find((c) => c.customerId === id);
-    return customer ? customer.name : 'Loading...';
+  // Handles both object and numeric customerId
+  const getCustomerName = (customerObj) => {
+    if (!customerObj || typeof customerObj !== 'object') return 'N/A';
+    return customerObj.name || 'N/A';
   };
 
   // Filter bookings for selected week (startDate to startDate + 6 days)
@@ -67,9 +67,8 @@ export default function Reports() {
     doc.setFontSize(18);
     doc.text('Weekly Booking Report', 14, 22);
 
-    let yOffset = 30; // initial Y position
+    let yOffset = 30;
 
-    // Add selected date range
     if (startDate) {
       const start = new Date(startDate);
       const end = new Date(start);
@@ -84,7 +83,6 @@ export default function Reports() {
     Object.keys(weeklyData).forEach((day) => {
       const dayBookings = weeklyData[day];
 
-      // Add section title
       doc.setFontSize(14);
       doc.text(day, 14, yOffset);
       yOffset += 6;
@@ -92,7 +90,7 @@ export default function Reports() {
       const tableRows = dayBookings.map((b) => [
         b.bookingId,
         getCustomerName(b.customerId),
-        b.roomId,
+        `${b.roomId?.roomNumber} (${b.roomId?.roomType})`,
         new Date(b.checkInDate).toLocaleString(),
         new Date(b.checkOutDate).toLocaleString(),
         b.specialRequests?.map(r => r.description).join(', ') || 'None'
@@ -105,7 +103,7 @@ export default function Reports() {
         styles: { fontSize: 10 },
         theme: 'grid',
         didDrawPage: (data) => {
-          yOffset = data.cursor.y + 10; // update Y position after table
+          yOffset = data.cursor.y + 10;
         }
       });
     });
@@ -122,7 +120,6 @@ export default function Reports() {
     recurring: { width: '100px' },
     requests: { width: '200px' },
   };
-
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
@@ -150,8 +147,6 @@ export default function Reports() {
         Download PDF
       </Button>
 
-
-      {/* Weekly View */}
       <Typography variant="h5" mt={5} gutterBottom>
         Weekly View
       </Typography>
@@ -176,7 +171,9 @@ export default function Reports() {
                   <TableRow key={b.bookingId}>
                     <TableCell sx={columnStyles.bookingId}>{b.bookingId}</TableCell>
                     <TableCell sx={columnStyles.customer}>{getCustomerName(b.customerId)}</TableCell>
-                    <TableCell sx={columnStyles.room}>{b.roomId}</TableCell>
+                    <TableCell sx={columnStyles.room}>
+                      {b.roomId?.roomNumber} ({b.roomId?.roomType})
+                    </TableCell>
                     <TableCell sx={columnStyles.checkIn}>{new Date(b.checkInDate).toLocaleString()}</TableCell>
                     <TableCell sx={columnStyles.checkOut}>{new Date(b.checkOutDate).toLocaleString()}</TableCell>
                     <TableCell sx={columnStyles.requests}>
@@ -187,7 +184,6 @@ export default function Reports() {
                   </TableRow>
                 ))}
               </TableBody>
-
             </Table>
           </TableContainer>
         </Box>

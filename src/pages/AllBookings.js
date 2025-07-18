@@ -22,7 +22,7 @@ export default function Home() {
 
 
   useEffect(() => {
-    getAllBookings().then((data)=>{
+    getAllBookings().then((data) => {
       console.log(data);
       setBookings(data);
     });
@@ -50,32 +50,44 @@ export default function Home() {
             </TableHead>
             <TableBody>
               {bookings.map((b) => (
-                <TableRow key={b.id}>
-                  <TableCell >{b.bookingId}</TableCell>
-                  <TableCell>{b.roomId}</TableCell>
-                  <TableCell>{b.customerId}</TableCell>
+                <TableRow key={b.bookingId}>
+                  <TableCell>{b.bookingId}</TableCell>
+
+                  <TableCell>
+                    {b.roomId?.roomNumber} ({b.roomId?.roomType})
+                  </TableCell>
+
+                  <TableCell>
+                    {b.customerId
+                      ? `${b.customerId.name} (${b.customerId.email})`
+                      : 'N/A'}
+                  </TableCell>
+
                   <TableCell sx={{ whiteSpace: 'nowrap' }}>
                     {new Date(b.checkInDate).toLocaleString()}
                   </TableCell>
+
                   <TableCell sx={{ whiteSpace: 'nowrap' }}>
                     {new Date(b.checkOutDate).toLocaleString()}
                   </TableCell>
+
                   <TableCell>
                     {b.specialRequests && b.specialRequests.length > 0 ? (
                       <ul style={{ paddingLeft: '1rem', margin: 0, lineHeight: '1.6' }}>
                         {b.specialRequests.map((r) => (
-                          <li key={r.requestId} style={{ whiteSpace: 'nowrap' }}>{r.description}</li>
+                          <li key={r.requestId} style={{ whiteSpace: 'nowrap' }}>
+                            {r.description}
+                          </li>
                         ))}
                       </ul>
                     ) : (
                       'None'
                     )}
                   </TableCell>
-
-
                 </TableRow>
               ))}
             </TableBody>
+
           </Table>
         </TableContainer>
 

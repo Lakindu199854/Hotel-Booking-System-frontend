@@ -32,6 +32,8 @@ function App() {
           <Route path="/" element={<CheckAvailability />} />
           <Route path="/check-availability" element={<CheckAvailability />} />
           <Route path="/proceed-booking" element={<ProceedBooking />} />
+          <Route path="/add-booking" element={<AddBooking />} />
+
 
         </Routes>
       </Box>

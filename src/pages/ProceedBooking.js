@@ -37,12 +37,25 @@ export default function ProceedBooking() {
     const [selectedRequests, setSelectedRequests] = useState([]);
     const [errorDialogOpen, setErrorDialogOpen] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const [isNewCustomer, setIsNewCustomer] = useState(false);
+    const [existingCustomers, setExistingCustomers] = useState([]);
+    const [selectedCustomerId, setSelectedCustomerId] = useState('');
+
 
 
 
     useEffect(() => {
         getAllSpecialRequest().then(setSpecialRequest);
     }, []);
+
+    useEffect(() => {
+        getAllSpecialRequest().then(setSpecialRequest);
+        fetch('/api/customers') // replace with your actual endpoint
+            .then(res => res.json())
+            .then(setExistingCustomers)
+            .catch(err => console.error("Error fetching customers", err));
+    }, []);
+
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -60,13 +73,36 @@ export default function ProceedBooking() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!customer.name || !customer.email || !customer.phone) {
-            alert('Please fill all customer fields');
-            return;
+        let customerIdToUse;
+
+        if (selectedCustomerId) {
+            // Use selected existing customer
+            customerIdToUse = selectedCustomerId;
+        } else {
+            // Validate new customer fields
+            if (!customer.name || !customer.email || !customer.phone) {
+                alert('Please select an existing customer or enter new customer details.');
+                return;
+            }
+
+            // Create new customer
+            try {
+                const response = await fetch('/api/customers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(customer)
+                });
+                const newCustomer = await response.json();
+                customerIdToUse = newCustomer.customerId;
+            } catch (err) {
+                setErrorMessage('Failed to create new customer');
+                setErrorDialogOpen(true);
+                return;
+            }
         }
 
         const bookingData = {
-            customer: { ...customer },
+            customerId: customerIdToUse,
             roomId: selectedRoom.roomId,
             checkInDate: checkIn,
             checkOutDate: checkOut,
@@ -79,8 +115,8 @@ export default function ProceedBooking() {
         try {
             await createBooking(bookingData);
             alert('Booking Successful!');
-            //Clear form fields
             setCustomer({ name: '', email: '', phone: '' });
+            setSelectedCustomerId('');
             setIsRecurring(false);
             setRecurrenceCount('');
             setRecurrenceType('weekly');
@@ -90,8 +126,9 @@ export default function ProceedBooking() {
             setErrorMessage(msg);
             setErrorDialogOpen(true);
         }
-
     };
+
+
 
     return (
         <Box sx={{ maxWidth: 600, mx: 'auto', mt: 4, p: 2 }}>
@@ -105,6 +142,27 @@ export default function ProceedBooking() {
             <Typography variant="body1">Check-Out: {checkOut}</Typography>
 
             <form onSubmit={handleSubmit}>
+                {/* Existing Customer Dropdown */}
+                <FormControl fullWidth margin="normal">
+                    <InputLabel>Select Existing Customer</InputLabel>
+                    <Select
+                        value={selectedCustomerId}
+                        onChange={(e) => setSelectedCustomerId(e.target.value)}
+                        displayEmpty
+                    >
+                        <MenuItem value="">-- None --</MenuItem>
+                        {existingCustomers.map((cust) => (
+                            <MenuItem key={cust.customerId} value={cust.customerId}>
+                                {cust.name} ({cust.email})
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+
+                <Typography variant="subtitle1" sx={{ mt: 2 }}>
+                    Or Add New Customer
+                </Typography>
+
                 <TextField
                     fullWidth
                     margin="normal"
@@ -129,6 +187,7 @@ export default function ProceedBooking() {
                     value={customer.phone}
                     onChange={handleChange}
                 />
+
 
                 <FormControlLabel
                     control={
